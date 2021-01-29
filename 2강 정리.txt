@@ -173,7 +173,7 @@ https://lvdmaaten.github.io/tsne/
 
 
 =====================================
-Linear classification (선형 분류)
+Linear classification (선형 분류) ->template matching 방법, 고차원 -> 저차원으로 해서 score를 표시하는 선으로 나타내는 방법.
 왜 Linear일까 생각해봤는데 가장 직관적인 이유는 함수가 1차함수이다. 그래서 선형인것 같다는 느낌을 받았다.
 또한 쭉 보면 알지만 img들의 평균으로 딱 하나의 template만 있다.
 
@@ -326,5 +326,6 @@ image의 경우  training image의 평균을 계산하고, 그 평균을 모든 
 
 
 경사하강을 이해할때가지.
+
 
 

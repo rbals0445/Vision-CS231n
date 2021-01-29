@@ -1,0 +1,150 @@
+Loss function 손실함수
+
+score function에 의해서 분류된 점수가 얼마나 잘못된건지 quantify 해주는 함수.
+loss function score가 높으면 잘못 분류된것임, 그리고 잘 분류되었으면 손실함수값이 낮음.
+
+Multiclass SVM(Support vector machine) 손실함수
+
+loss function을 정의하는 방법은 여러가지가 있다.
+그 첫번째 예시로 Multiclass SVM loss를 들 수 있다. 
+SVM loss는 고정값 delta를 통해서 SVM이 incorrect class보다 더 높은 점수를 가지게 설정해주는걸 말한다.
+-> 참고로 delta는 hyperparameter 이다.(최적의 값을 찾아야 한다는 뜻 bias느낌)
+이것은 우리가 위에서 한 loss function을 *의인화해주는데 도움을 준다.
+
+원문이 이렇게 나와있는데,
+The SVM loss is set up so that the SVM “wants” the correct class for each image to a have a score higher than the incorrect classes by some fixed margin $\Delta$.
+
+*의인화를 해준다-> SVM "wants"의 뜻이 더 낮은 loss 값을 갖게 해주는걸 말한다.
+( 내 생각에 사람이 아닌것이 원한다는 표현을 써서 그런것 같다.)
+
+좀 더 자세히보면 
+image 픽셀 x, 레이블 y를 기준으로
+score function은 f(x,w) 를 취한다. 그리고 이것을 줄여서 s라고 하자 (score값)
+어떤 j번째 클래스의 점수는 이렇게 표현한다.
+$ s_j = f(x_i, W)_j 
+
+i번째 클래스에 대한 Multiclass SVM loss는 아래와 같이 공식이 만들어진다.
+자기 자신것을 제외하고 최댓값만 더하는데, 거기에 delta를 붙인..
+---공식 붙여넣기----
+Li=∑(j≠yi)max(0,sj−syi+Δ)
+
+EX) 3개의 클래스가 있다고 가정하자.
+각각의 Score = [13,-7,11] 이다.
+또한 hyperparameter delta를 10으로 두자.
+여기서 첫번째 원소 13은 실제 class이고 -7과 11이 공식으로 나온것이다. (y = 0 )
+===이해가 안감=====
+공식을 이용해서 더하면 L0 = max(0 , -7 -13 + 10) + max(0, 11 - 13 + 10) =  0 + 8 = 8
+첫번째 식은 0이다. why? correct class score(13)가 incorrect class score(-7)보다 높기 때문이다. 
+참고로 delta 10이 있기때문에 실제 차이는 20이다. 
+delta의 의미는 SVM이 label과 score값의 차이를 적어도 10까지는 인정을 해준다는 의미이다. 그 이상은 0으로 나오게 될 것이다.
+
+SVM loss function은 correct class의 score y(i)가 incorrect socre보다 커지는걸 원하는것이다.(delta를 이용해서)
+이런 경우가 아니라면 loss는 계속 축적된다. 좀 더 엄격하게 구분하기 위함이다.
+
+hinge loss(그래프 모양에서 유래됨)
+x축은 true score을 의미하고, y는 loss를 의미한다.
+score가 양수로 올라갈수록  loss는 줄어들 수 밖에 없다. 
+사진에서는 delta가 1이라 s_j가 왼쪽으로 한 칸 이동한것이다.
+delta가 있는 이유는 좀 더 안전하게 분류하기 위함인것 같다.
+ex) delta가 없는경우
+ground truth = cat (30점)
+dog = 29점
+일 때 delta가 없으면 이건 loss가 0 으로 잘 됐다고 나올것이다.
+하지만 이건 분류가 뭔가 약간의 차이로 잘 된것이고, 좀만 달라지면 dog로 볼 확률이 높다는 것이다.
+
+이 delta를 통해서 29점이면 loss가 나오게 해서 좀 더 정확한 classifier를 만들라는 지표로 삼을 수 있는것이다. 오우 뭐야 굿
+
+
+때때로 squared hinge loss SVM(or L2-SVM) 대신에 쓰인다. 
+L2-SVM은 $max(0,-) ^2 을 사용한다. 이걸 사용하면 violated margin들을 좀 더 penalize 할 수 있다. (제곱이므로)
+linear version이 좀 더 표준이긴 하지만, 어떤 data set 에서는 제곱한 hinge loss가 좀 더 작동이 잘 되기도 한다.
+이것은 cross-validation 동안에 결정된다.
+
+The loss function quantifies our unhappiness with predictions on the training set
+
+Multiclass SVM은 correct class가 delta를 이용해서 다른 클래스보다 더 높은 점수를 갖는걸 도와준다.
+만약 어떤 class가 red region이나 그 위에 위치하면 loss가 쌓이게 된다. 그렇지 않으면 loss는 0이다.
+우리의 목표는 weight를 찾는것이다. (training data에 있는 모든 예시에 대한 제약조건을 만족하고 동시에 total loss는 가장 낮게 하는)
+
+Regularization(위에서 unique 하지 않다고 했기 때문에 이 R(W)를 통해서 unique한 W를 결정해준다)
+
+위에서 설명한 loss function에는 한가지 버그가 있다.
+dataset이 있고, 모든 class를 정확하게 분류하는 W가 있다고 했을때, 문제는 이 W가 unique하지 않다는 말이다.
+이게 무슨뜻인가 하면 xW = 0 이면 ㅅW (lamda W) lamda>1 일때 에도 항상 0을 만족하는 W가 존재하는것이다.
+
+(왼쪽 식 : training data의 최적화 , 오른쪽 식 : test set에 일반화)
+data에 맞고, 가장 작은 W값 찾아내기.
+training data의 정확도는 좀 떨어지겠지만, test set에서의 performance를 증가시킬 수 있음.
+R 입장에서는 W가 0일수록 좋음. loss가 작아지니까.
+하지만 data loss입장에서는 W가 0일 수 없음. 두개에 대해서 일반화된게 필요.
+
+만약 W의 score difference가 15이면 2W일땐 score diff가 30이 된다.
+이 모호함을 줄일 수 있는 방법이 있다.
+loss function을 regularization penalty를 통해서 확장시키면 된다.R(W)
+가장 일반적인 regularization penalty는 L2 norm 이다.  element들의 quadratic penalty를를 통해서 large weight를 막는다.
+---식----
+위에있는 식은 우리는 모든 W의 원소들이 제곱된것의 합을 구한다.
+regularization function은 data의 함수가 아니다. 이것은 오직 weight 기반 함수이다.
+이 regularization penalty를 포함해야 full Multiclass SVM loss가 되는것이다.
+
+--따라서 전체 식은-- 식 표현
+여기서 N은 training example의 개수이다. 
+hyperparameter lamda를 붙여서 regularization penalty를 추가했다.
+이 hyperparameter을 set하는 방법은 간단한것은 없다. 보통 cross-validation을 통해서 구한다.
+
+가장 흥미로운 property는 large weight에 penalize를 하는것은 일반화를 좀 더 개선시키는 경향이 있다.
+왜냐하면 input dimension이 score에 큰 영향을 끼칠 수 없기 때문이다.
+
+예시를 보면 R(W)는 가중치도 작고, 분산된걸 선호함. 모든 case에 대해서 고려를 해야하니까.
+
+w1과  w2의 내적 결과는 같지만 w2의 가중치가 w1의 가중치보다 훨씬 적다.
+직관적으로도 w2가 가중치도 작고 좀 더 분산되어 있어 더 좋다. 
+
+L2 penalty는 작고 분산된 weight vector를 선호하기 때문에 최종 분류기는 약간의 input dimension을 엄청 크게하는것 보다는, 모든 input dimension을 작은걸로 하는걸 고려해야한다. 
+
+다음 시간에 보겠지만, 이 효과는 image를 테스트하는 분류기의 generalization performance를 향상시키고 less overfitting으로 이끈다.
+
+bias 는 같은 영향을 주지 않는다.. 가중치와 달리 input dimension의 영향을 컨트롤 할 수 없기 때문이다.
+그러므로 b보다는 W를 regularize 하는게 일반적이다. 
+그러나 실제로는 이건 거의 미미한 효과이긴 하다. 마지막으로 regularization penalty때문에 모든 예시들에 대해서 우리는 절대
+정확한 0.0 loss를 달성할 수는 없다. why? 이건 W = 0 일때만 가능한 일이기 때문이다.
+
+SVM loss는 한가지 특정한 접근법을 가진다. training data에 대한 예측들이 얼마나 실측값과 비슷하게 측정이 되는지.
+추가적으로 좋은 prediction을 하는건 loss를 줄인다는것과 같다.
+
+우리가 이제 해야할것은 좋은 weight와 loss를 최소화 하는것이다.
+
+현실적인 고려들.
+1. Delta 설정하기
+아까 hyperparameter delta와 세팅에 대해서 잠깐 다뤘다. 어떤 value가 설정이 되어야하는지, 우리가 그것들 교차검증을 해야하는지. 이 hyperparameter은 안전하게 1로 세팅될 수 있다. 모든 case에서.
+delta와 lamda 는 2개의 다른 hyperparameter처럼 보인다. 하지만 실제로는 둘다 같은 tradeoff 가 있다.(data loss와 regularization loss 사이에)
+이걸 이해하기 위한 key는 W의 강도에 따라서 score에 직접적으로 영향을 준다. 따라서 tradeoff의 차이도 커진다.
+
+우리가 W에 있는 값들을 줄였기 때문에 score의 차이가 좀 더 낮아질 것이다. (W에 강도에 영향을 받으니까..)
+그러므로  score 사이의 정확한 값의 margin (delta = 1 or delta = 100)는  의미가 없다. why? W가 임의적으로 difference를 조절할 수 있으니까.
+-> 결론 : W가 제일 중요하다.
+
+만약 class가 2개밖에 없는 경우에는 Binary Support Vector Machine을 쓰면 된다.
+
+Softmax classifier (loss function에 대한 log를 최대화 하는것이 목표), -log class에 대해서는 최소화 하는것이 목표.
+-> 점수들을 e의 지수승으로 바꾸고, 그것을 전체 합으로 나눠서 normalize한다.
+normalize가 되면 모든 클래스의 합이 1이 된다.(확률)
+
+SVM은 2개의 일반적인 classifier중 하나였다. 그거 말고 다른 하나는 Softmax classifier이다. (Multinomial Logistic Regression) 다항 로지스틱 회귀 라고도 한다.
+
+이 Softmax Classifier은 다른 loss function을 가지고 있다. Binary Logistic Regression classifier을 들어봤다면, 이것은 
+여러 클래스에서 일반화 된 classifier라고 보면 된다. SVM이 각각 클래스에 대해 f(x,W)의 output을 내는것과 달리 ->보정되지 않고 해석하기 어려운 점수. Softmax 분류기는 조금 더 직관적인 output을 준다. (좀 더 정규화된 클래스 확률) 그리고 또한 확률론적 해석도 있다.
+
+Softmax 분류기에서 함수 매핑 f(x, W) = Wx 는 변하지 않는다. 하지만, 우리가 이 점수들을 정규화되지 않은 log 퍼센트로 해석을 한다. 그리고 hinge loss를 cross-entropy loss로 교체한다. 아래 식이 있다.
+---- 식 첨부 -----
+
+여기서 f_j 의 뜻은 class score f에서 j번째 클래스를 말한다.
+이전과 같이 dataset의 full loss는 L_i 의 평균으로 나타낸다. (모든 training 예제 및 regularization term R(W) 까지 합해서)
+함수 f_j(Z) 이 식(식 첨부)은 softmax 함수라고 불린다.
+z에 있는 임의의 실제 점수로 이루어진 벡터를 취한다. 그리고 vector의 값이 0에서 1 사이까지 줄인다. 그리고 1과 더한다.
+
+
+
+
+
+
